@@ -93,7 +93,7 @@ def softmax_regression(X, y, iterations, learning_rate, _lambda, verbose=True, s
     if verbose:
         return temp_theta, cost_list
     else: 
-        temp_theta
+        return temp_theta
 
 def softmax_output(X, theta):
     """
