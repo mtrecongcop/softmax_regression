@@ -163,7 +163,7 @@ def softmax_cost(softmax_output, Y, _lambda, theta):
     """
     m = Y.shape[0] # number of samples
     loss_per_sample = np.sum(Y * np.log(softmax_output + 1e-15), axis=1) # shape (m,)
-    cost = np.mean(loss_per_sample)
+    cost = -np.mean(loss_per_sample)
     regularization = (_lambda / (2 * m)) * np.sum(theta**2, axis=None) # Sum all elements in the array
     return cost + regularization
 
