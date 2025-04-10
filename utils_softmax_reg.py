@@ -87,7 +87,7 @@ def softmax_cost(softmax_output, Y, _lambda, theta, regularize=True):
     else:
         return cost
     
-def softmax_regression(X, y, iterations, learning_rate, _lambda, verbose=True, return_final_cost=False, seed=1, epsilon=1e-4):
+def softmax_regression(X, y, iterations, learning_rate, _lambda, verbose=True, return_final_cost=False, seed=1, early_stopping=True, epsilon=1e-4):
     """
     Update randomized thetas (feature weights) from a standard normal distribution
     associated with the nth feature under the kth class
@@ -109,6 +109,9 @@ def softmax_regression(X, y, iterations, learning_rate, _lambda, verbose=True, r
         Show more information like the error stops and the loss plot
     seed : int
         Manually set the seed to randomize initialized array of thetas
+    early_stopping : bool, default=True
+        Stop iteration once convergence is reached based on the difference of the current
+        cost and the last cost being less than epsilon
     epsilon : float, default=1e-4
         The difference threshold between the cost of the last iteration and the cost
         of the current iteration. For early stopping purposes
@@ -159,11 +162,12 @@ def softmax_regression(X, y, iterations, learning_rate, _lambda, verbose=True, r
         temp_theta -= learning_rate * gradient
         # Note: We always regularize when fitting!
         cost_list.append(softmax_cost(temp_softmax_output, Y, _lambda, temp_theta, regularize=True))
-        # Early stopping case based on abs(cost_list[-1] - cost_list[-2]) provided the iter > 1 
-        if iter > 1 and abs(cost_list[-1] - cost_list[-2]) < epsilon:
-             if verbose:
-                print(f"Stopping at iteration: {iter} as delta cost: {abs(cost_list[-1] - cost_list[-2])} < epsilon: {epsilon}")
-             break
+        # Early stopping case based on abs(cost_list[-1] - cost_list[-2]) provided the iter > 1
+        if early_stopping: 
+            if iter > 1 and abs(cost_list[-1] - cost_list[-2]) < epsilon:
+                if verbose:
+                    print(f"Stopping at iteration: {iter} as delta cost: {abs(cost_list[-1] - cost_list[-2])} < epsilon: {epsilon}")
+                break
     
     # Create a plot of cost per iteration
     if verbose:
@@ -194,7 +198,9 @@ def softmax_predict(X, theta):
     An array of shape (m,) containing the index of the highest probability
     corresponding to the predicted class of the mth sample
     """
-    probs = softmax_output(X, theta)
+    # Ensure X is numpy
+    X_np = X.values
+    probs = softmax_output(X_np, theta)
     return np.argmax(probs, axis=1)
 
 # Model selection functions 
@@ -417,7 +423,7 @@ def optimize_lambda(lambda_range, X, y, n_splits, random_state, verbose=True,
 
             # Predict using the estimated theta of each fold
             theta_lam = softmax_regression(X=X_tr, y=y_tr, iterations=no_iterations, learning_rate=0.001, _lambda=lam,
-                                           verbose=False, seed=random_state)
+                                           verbose=False, seed=random_state, early_stopping=False)
             
             softmax_output_lam = softmax_output(X=X_val, theta=theta_lam)
             
@@ -450,7 +456,7 @@ def optimize_lambda(lambda_range, X, y, n_splits, random_state, verbose=True,
 
     return f"Best lambda: {best_lambda:.4f}, Average validation Error: {np.min(avg_lam_loss)}"
 
-def determine_optimal_iterations(iteration_range, X, y, _lambda, show_plot=True):
+def determine_optimal_iterations(iteration_range, X, y, _lambda, seed, show_plot=True):
     """
     Return what is the optimal number of iterations after fitting the whole training set
     from a range of iteration values.
@@ -465,6 +471,8 @@ def determine_optimal_iterations(iteration_range, X, y, _lambda, show_plot=True)
         The training set labels.
     _lambda : int
         The best regularization strength as evaluated using KFold.
+    seed : int
+        Set the randomizer to a fixed value for reproducibility.
     show_plot : bool, default=True
         Option to show the plot of number of iterations with end_costs.
     
@@ -484,7 +492,7 @@ def determine_optimal_iterations(iteration_range, X, y, _lambda, show_plot=True)
     # Final cost estimates
     end_costs = []
     for iteration in iteration_range:
-        theta, end_cost = softmax_regression(X=X, y=y, iterations=iteration, learning_rate=0.001, _lambda=_lambda, verbose=False, return_final_cost=True, seed=1)
+        theta, end_cost = softmax_regression(X=X, y=y, iterations=iteration, learning_rate=0.001, _lambda=_lambda, verbose=False, return_final_cost=True, seed=seed)
         end_costs.append(end_cost)
 
     # Determine optimal num_iterations
