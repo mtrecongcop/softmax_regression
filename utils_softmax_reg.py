@@ -399,20 +399,16 @@ def optimize_lambda(lambda_range, X, y, n_splits, random_state, verbose=True,
             # Check if X is a dataframe
             # Convert everything to NumPy ndarray 
             # Note y_tr and y_val are one hot encoded to k classes i.e. shape (no_indices, k) 
+            # Only one hot encode y_val as y_tr is only used on the softmax_regression function
             if isinstance(X, pd.DataFrame):
                 X_tr = X.iloc[train_idx,:].values
-                # One hot encode y_tr! Then convert to NumPy
-                y_tr = (pd.get_dummies(y.iloc[train_idx], dtype=float)).values
+                y_tr = y.iloc[train_idx].values
                 X_val = X.iloc[val_idx,:].values
-                # One hot encode y_tr! Then convert to NumPy
                 y_val = pd.get_dummies(y.iloc[val_idx], dtype=float).values
             # Case when X is NumPy
             elif isinstance(X, np.ndarray):
                 X_tr = X[train_idx,:]
-                # Convert to Series first
-                y_tr_pd = pd.Series(data=y[train_idx])
-                # One hot encode y_tr! Then convert to NumPy
-                y_tr = pd.get_dummies(y_tr_pd, dtype=float).values
+                y_tr = y[train_idx]
                 X_val = X[val_idx,:]
                 # Convert to Series first
                 y_val_pd = pd.Series(data=y[val_idx])
