@@ -6,7 +6,7 @@ import seaborn as sns
 # Modeling functions
 
 # Note: y or ground truth labels MUST be in numerical 0,1,2 form. Our functions
-# automatically one-hot encodes the. 
+# automatically one-hot encodes this. 
 
 def softmax_output(X, theta):
     """
